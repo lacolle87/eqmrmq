@@ -34,11 +34,13 @@ if err != nil {
 }
 defer ch.Close()
 
+correlationId := GenerateCorrelationId()
+
 // Send a message
 err := eqmrmq.SendMessage(eqmrmq.Message{
     QueueName:     "my_queue",
     Message:       "Hello, RabbitMQ!",
-    CorrelationId: "123",
+    CorrelationId: correlationId,
     ReplyQueue:    "",
     Ch:            ch,
 })
