@@ -57,7 +57,6 @@ func receiveResponse(correlationId, replyQueue string, ch *amqp.Channel) ([]byte
 			return d.Body, nil
 		}
 	}
-
 	return nil, fmt.Errorf("no response received for correlationId: %s", correlationId)
 }
 
