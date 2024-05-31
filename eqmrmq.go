@@ -6,57 +6,12 @@ import (
 	"time"
 )
 
-type QueueConfig struct {
-	Name       string
-	Durable    bool
-	AutoDelete bool
-	Exclusive  bool
-	NoWait     bool
-	Args       amqp.Table
-}
-
 type Message struct {
 	QueueName     string
 	Message       string
 	CorrelationId string
 	ReplyQueue    string
 	Ch            *amqp.Channel
-}
-
-type RMQService struct {
-	conn    *amqp.Connection
-	channel *amqp.Channel
-	queues  map[string]amqp.Queue
-}
-
-func NewRabbitMQService(conn *amqp.Connection, queueConfigs []QueueConfig) (*RMQService, error) {
-	ch, err := conn.Channel()
-	if err != nil {
-		return nil, err
-	}
-
-	queues := make(map[string]amqp.Queue)
-
-	for _, qConfig := range queueConfigs {
-		q, declareErr := ch.QueueDeclare(
-			qConfig.Name,
-			qConfig.Durable,
-			qConfig.AutoDelete,
-			qConfig.Exclusive,
-			qConfig.NoWait,
-			qConfig.Args,
-		)
-		if declareErr != nil {
-			return nil, declareErr
-		}
-		queues[qConfig.Name] = q
-	}
-
-	return &RMQService{
-		conn:    conn,
-		channel: ch,
-		queues:  queues,
-	}, nil
 }
 
 func SendMessage(msgParams Message) error {
