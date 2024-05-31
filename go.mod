@@ -1,4 +1,4 @@
-module eqmrmq
+module "github.com/lacolle87/eqmrmq"
 
 go 1.22
 
