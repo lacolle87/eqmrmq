@@ -1,7 +1,7 @@
 # EQMRMQ
 EQMRMQ is a Go package for simplified interaction with RabbitMQ, specifically designed for sending messages, receiving responses, and consuming messages from queues with ease.
 
-The eqmrmq package utilizes the [github.com/rabbitmq/amqp091-go](https://github.com/rabbitmq/amqp091-go) package, which is an AMQP 0.9.1 Go client library. This library provides the underlying functionality for interacting with RabbitMQ, including features such as establishing connections, creating channels, publishing messages, consuming messages, and handling acknowledgments. By leveraging [github.com/rabbitmq/amqp091-go](https://github.com/rabbitmq/amqp091-go), eqmrmq simplifies the process of sending and receiving messages to and from RabbitMQ queues within Go applications.
+The eqmrmq package utilizes the [github.com/rabbitmq/amqp091-go](https://github.com/rabbitmq/amqp091-go) package, which is an AMQP 0.9.1 Go client library. This library provides the underlying functionality for interacting with RabbitMQ, including features such as establishing connections, creating channels, publishing messages, consuming messages, and handling acknowledgments. By leveraging [amqp091-go](https://github.com/rabbitmq/amqp091-go), eqmrmq simplifies the process of sending and receiving messages to and from RabbitMQ queues within Go applications.
 
 ### Installation
 To install EQMRMQ, use **go get**:
