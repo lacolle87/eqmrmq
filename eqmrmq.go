@@ -75,7 +75,7 @@ func GenerateCorrelationId() string {
 	return fmt.Sprintf("%d", time.Now().UnixNano())
 }
 
-func SendToQueueWithResponse(queueName, message string, ch *amqp.Channel) ([]byte, error) {
+func PublishToQueueWithResponse(queueName, message string, ch *amqp.Channel) ([]byte, error) {
 	correlationId := GenerateCorrelationId()
 	replyQueue, err := CreateReplyQueue(ch)
 	if err != nil {

@@ -16,8 +16,8 @@ Import EQMRMQ into your Go project:
 import "github.com/yourusername/eqmrmq"
 ```
 
-##### Sending a Message
-To send a message to a queue:
+##### Publishing a Message
+To Publish a message to a queue:
 
 ```go
 // Create a new RabbitMQ connection
@@ -51,12 +51,12 @@ if err != nil {
 }
 ```
 
-##### Sending a Message with Response
+##### Publishing a Message with Response
 To send a message to a queue and wait for a response:
 
 ```go
 // Send a message and wait for response
-response, err := eqmrmq.SendToQueueWithResponse("my_queue", "Hello, RabbitMQ!", ch)
+response, err := eqmrmq.PublishToQueueWithResponse("my_queue", "Hello, RabbitMQ!", ch)
 if err != nil {
     panic(err)
 }
