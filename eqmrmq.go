@@ -15,7 +15,7 @@ type Message struct {
 	Ch            *amqp.Channel
 }
 
-func (msg *Message) Publish() error {
+func (msg Message) Publish() error {
 	return msg.Ch.Publish(
 		"",
 		msg.QueueName,
