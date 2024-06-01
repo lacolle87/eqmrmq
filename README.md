@@ -43,37 +43,39 @@ To Publish a message to a queue:
 
 ```go
 func main() {
-// Create a new RabbitMQ connection
-rabbitURL := "amqp://guest:guest@localhost:5672/"
-conn, err := eqmrmq.Connect(rabbitURL)
-if err != nil {
-log.Fatalf("Failed to connect to RabbitMQ: %v", err)
-}
-defer conn.Close()
+    // Create a new RabbitMQ connection
+    rabbitURL: = "amqp://guest:guest@localhost:5672/"
+    conn,
+    err: = eqmrmq.Connect(rabbitURL)
+    if err != nil {
+        log.Fatalf("Failed to connect to RabbitMQ: %v", err)
+    }
+    defer conn.Close()
 
-// Create a channel
-ch, err := conn.Channel()
-if err != nil {
-panic(err)
-}
-defer ch.Close()
+    // Create a channel
+    ch,
+    err: = conn.Channel()
+    if err != nil {
+        panic(err)
+    }
+    defer ch.Close()
 
-// Generate a correlation ID
-correlationId := eqmrmq.GenerateCorrelationId()
+    // Generate a correlation ID
+    correlationId: = eqmrmq.GenerateCorrelationId()
 
-// Send a message
-msg := eqmrmq.Message{
-QueueName:     "my_queue",
-Message:       "Hello, RabbitMQ!",
-CorrelationId: correlationId,
-ReplyQueue:    "", // Assuming no reply queue is needed here
-Ch:            ch,
-}
+    // Send a message
+        msg: = eqmrmq.Message {
+        QueueName: "my_queue",
+        Message: "Hello, RabbitMQ!",
+        CorrelationId: correlationId,
+        ReplyQueue: "", // Assuming no reply queue is needed here
+        Ch: ch,
+    }
 
-err = msg.Publish()
-if err != nil {
-log.Fatalf("Failed to publish message: %v", err)
-}
+        err = msg.Publish()
+    if err != nil {
+        log.Fatalf("Failed to publish message: %v", err)
+    }
 }
 ```
 
@@ -84,7 +86,7 @@ To send a message to a queue and wait for a response:
 // Send a message and wait for response
 response, err := eqmrmq.PublishToQueueWithResponse("my_queue", "Hello, RabbitMQ!", ch)
 if err != nil {
-panic(err)
+	panic(err)
 }
 fmt.Println("Response:", string(response))
 ```
@@ -94,14 +96,14 @@ To consume messages from a queue:
 ```go
 // Define a handler function
 handler := func(ch *amqp.Channel, d amqp.Delivery) error {
-fmt.Println("Received message:", string(d.Body))
+	fmt.Println("Received message:", string(d.Body))
 return nil
 }
 
 // Consume messages
 err := eqmrmq.ConsumeMessages(ch, "my_queue", handler)
 if err != nil {
-panic(err)
+	panic(err)
 }
 ```
 
@@ -112,7 +114,7 @@ To reply to a message:
 // Reply to a message
 err := eqmrmq.ReplyToMessage(ch, delivery, []byte("Response from server"))
 if err != nil {
-panic(err)
+	panic(err)
 }
 ```
 
