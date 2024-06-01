@@ -37,15 +37,17 @@ defer ch.Close()
 correlationId := GenerateCorrelationId()
 
 // Send a message
-err := eqmrmq.SendMessage(eqmrmq.Message{
-    QueueName:     "my_queue",
-    Message:       "Hello, RabbitMQ!",
-    CorrelationId: eqmrmq.correlationId,
-    ReplyQueue:    "",
-    Ch:            ch,
-})
+msg := eqmrmq.Message{
+		QueueName:     "my_queue",
+		Message:       "Hello, RabbitMQ!",
+		CorrelationId: correlationId,
+		ReplyQueue:    "", // Assuming no reply queue is needed here
+		Ch:            ch,
+	}
+
+err = msg.Publish()
 if err != nil {
-    panic(err)
+    log.Fatalf("Failed to publish message: %v", err)
 }
 ```
 
