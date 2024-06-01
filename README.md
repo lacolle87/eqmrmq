@@ -1,7 +1,7 @@
 # EQMRMQ
 EQMRMQ is a Go package for simplified interaction with RabbitMQ, specifically designed for sending messages, receiving responses, and consuming messages from queues with ease.
 
-The eqmrmq package utilizes the [github.com/rabbitmq/amqp091-go](https://github.com/rabbitmq/amqp091-go) package, which is an AMQP 0.9.1 Go client library. This library provides the underlying functionality for interacting with RabbitMQ, including features such as establishing connections, creating channels, publishing messages, consuming messages, and handling acknowledgments. By leveraging [amqp091-go](https://github.com/rabbitmq/amqp091-go), eqmrmq simplifies the process of sending and receiving messages to and from RabbitMQ queues within Go applications.
+The eqmrmq package utilizes the [github.com/rabbitmq/amqp091-go](https://github.com/rabbitmq/amqp091-go) package, which is an AMQP 0.9.1 Go client library. This library provides the underlying functionality for interacting with RabbitMQ, including features such as establishing connections, creating channels, publishing messages, consuming messages, and handling acknowledgments. By leveraging [amqp091-go](https://github.com/rabbitmq/amqp091-go), eqmrmq simplifies the process of sending and receiving messages to and from RabbitMQ queues within Go applications. EQMRMQ utilizes the slog package for structured logging.
 
 ### Installation
 To install EQMRMQ, use **go get**:
@@ -16,38 +16,64 @@ Import EQMRMQ into your Go project:
 import "github.com/yourusername/eqmrmq"
 ```
 
+### Establishing a Connection
+To establish a connection to RabbitMQ and monitor it:
+
+```go
+package main
+
+import (
+	"log"
+	"github.com/lacolle87/eqmrmq"
+)
+
+func main() {
+	rabbitURL := "amqp://guest:guest@localhost:5672/"
+	conn, err := eqmrmq.Connect(rabbitURL)
+	if err != nil {
+		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
+	}
+	defer conn.Close()
+}
+```
+The Connect function establishes a connection to RabbitMQ and starts monitoring it to automatically reconnect if the connection is lost.
+
 ##### Publishing a Message
 To Publish a message to a queue:
 
 ```go
+func main() {
 // Create a new RabbitMQ connection
-conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+rabbitURL := "amqp://guest:guest@localhost:5672/"
+conn, err := eqmrmq.Connect(rabbitURL)
 if err != nil {
-    panic(err)
+log.Fatalf("Failed to connect to RabbitMQ: %v", err)
 }
 defer conn.Close()
 
 // Create a channel
 ch, err := conn.Channel()
 if err != nil {
-    panic(err)
+panic(err)
 }
 defer ch.Close()
 
-correlationId := GenerateCorrelationId()
+// Generate a correlation ID
+correlationId := eqmrmq.GenerateCorrelationId()
 
 // Send a message
 msg := eqmrmq.Message{
-		QueueName:     "my_queue",
-		Message:       "Hello, RabbitMQ!",
-		CorrelationId: correlationId,
-		ReplyQueue:    "", // Assuming no reply queue is needed here
-		Ch:            ch,
-	}
+QueueName:     "my_queue",
+Message:       "Hello, RabbitMQ!",
+CorrelationId: correlationId,
+ReplyQueue:    "", // Assuming no reply queue is needed here
+Ch:            ch,
+}
 
 err = msg.Publish()
 if err != nil {
-    log.Fatalf("Failed to publish message: %v", err)
+log.Fatalf("Failed to publish message: %v", err)
+}
 }
 ```
 
@@ -58,7 +84,7 @@ To send a message to a queue and wait for a response:
 // Send a message and wait for response
 response, err := eqmrmq.PublishToQueueWithResponse("my_queue", "Hello, RabbitMQ!", ch)
 if err != nil {
-    panic(err)
+panic(err)
 }
 fmt.Println("Response:", string(response))
 ```
@@ -68,14 +94,14 @@ To consume messages from a queue:
 ```go
 // Define a handler function
 handler := func(ch *amqp.Channel, d amqp.Delivery) error {
-    fmt.Println("Received message:", string(d.Body))
-    return nil
+fmt.Println("Received message:", string(d.Body))
+return nil
 }
 
 // Consume messages
 err := eqmrmq.ConsumeMessages(ch, "my_queue", handler)
 if err != nil {
-    panic(err)
+panic(err)
 }
 ```
 
@@ -86,7 +112,7 @@ To reply to a message:
 // Reply to a message
 err := eqmrmq.ReplyToMessage(ch, delivery, []byte("Response from server"))
 if err != nil {
-    panic(err)
+panic(err)
 }
 ```
 

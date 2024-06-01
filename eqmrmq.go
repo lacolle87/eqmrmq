@@ -2,6 +2,7 @@ package eqmrmq
 
 import (
 	"fmt"
+	"log/slog"
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -13,6 +14,48 @@ type Message struct {
 	CorrelationId string
 	ReplyQueue    string
 	Ch            *amqp.Channel
+}
+
+func Connect(rabbitURL string) (*amqp.Connection, error) {
+	conn, err := connectRabbitMQ(rabbitURL)
+	if err != nil {
+		return nil, err
+	}
+	go monitorConnection(conn, rabbitURL)
+	return conn, nil
+}
+
+func connectRabbitMQ(rabbitURL string) (*amqp.Connection, error) {
+	var conn *amqp.Connection
+	var err error
+	baseDelay := 2 * time.Second
+
+	for i := 0; i < 10; i++ {
+		conn, err = amqp.Dial(rabbitURL)
+		if err == nil {
+			slog.Info("Connected to RabbitMQ")
+			return conn, nil
+		}
+		slog.Warn(fmt.Sprintf("Failed to connect to RabbitMQ. Retrying in %s...", baseDelay), err)
+		time.Sleep(baseDelay)
+		baseDelay *= 2
+	}
+	return nil, fmt.Errorf("failed to connect to RabbitMQ after retries: %w", err)
+}
+
+func monitorConnection(conn *amqp.Connection, rabbitURL string) {
+	for {
+		time.Sleep(30 * time.Second)
+		if conn.IsClosed() {
+			slog.Warn("RabbitMQ connection lost. Reconnecting...")
+			newConn, err := connectRabbitMQ(rabbitURL)
+			if err != nil {
+				slog.Error("Failed to reconnect to RabbitMQ", err)
+				continue
+			}
+			conn = newConn
+		}
+	}
 }
 
 func (msg Message) Publish() error {
