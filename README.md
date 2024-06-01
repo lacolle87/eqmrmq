@@ -34,7 +34,7 @@ if err != nil {
 }
 defer ch.Close()
 
-correlationId := GenerateCorrelationId()
+correlationId := eqmrmq.GenerateCorrelationId()
 
 // Send a message
 msg := eqmrmq.Message{
