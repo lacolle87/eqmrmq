@@ -119,4 +119,4 @@ if err != nil {
 ```
 
 ### Acknowledgments
-Special thanks to the authors of RabbitMQ and the AMQP 0.9.1 Go client library [github.com/rabbitmq/amqp091-go](https://github.com/rabbitmq/amqp091-go) for providing the underlying functionality used by this package.
+Special thanks to the authors of RabbitMQ and the AMQP 0.9.1 Go client library [github.com/rabbitmq/amqp091-go](https://github.com/rabbitmq/amqp091-go) for providing the underlying functionality used by this package!
