@@ -2,8 +2,9 @@ package eqmrmq
 
 import (
 	"fmt"
-	amqp "github.com/rabbitmq/amqp091-go"
 	"time"
+
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type Message struct {
@@ -14,24 +15,22 @@ type Message struct {
 	Ch            *amqp.Channel
 }
 
-func SendMessage(msgParams Message) error {
-	err := msgParams.Ch.Publish(
+func (msg *Message) Publish() error {
+	return msg.Ch.Publish(
 		"",
-		msgParams.QueueName,
+		msg.QueueName,
 		false,
 		false,
 		amqp.Publishing{
 			ContentType:   "text/plain",
-			Body:          []byte(msgParams.Message),
-			CorrelationId: msgParams.CorrelationId,
-			ReplyTo:       msgParams.ReplyQueue,
+			Body:          []byte(msg.Message),
+			CorrelationId: msg.CorrelationId,
+			ReplyTo:       msg.ReplyQueue,
 		},
 	)
-	return err
 }
 
-func receiveResponse(correlationId, replyQueue string, ch *amqp.Channel) ([]byte, error) {
-	fmt.Printf("Waiting for response for correlationId: %s and replyTo: %s\n", correlationId, replyQueue)
+func ReceiveResponse(correlationId, replyQueue string, ch *amqp.Channel) ([]byte, error) {
 	msgs, err := ch.Consume(
 		replyQueue,
 		"",
@@ -47,20 +46,17 @@ func receiveResponse(correlationId, replyQueue string, ch *amqp.Channel) ([]byte
 
 	for d := range msgs {
 		if d.CorrelationId == correlationId {
-			fmt.Printf("Response received: %s\n", d.Body)
-
 			_, err = ch.QueueDelete(replyQueue, false, false, false)
 			if err != nil {
 				return nil, fmt.Errorf("failed to delete reply queue: %w", err)
 			}
-
 			return d.Body, nil
 		}
 	}
 	return nil, fmt.Errorf("no response received for correlationId: %s", correlationId)
 }
 
-func createReplyQueue(channel *amqp.Channel) (string, error) {
+func CreateReplyQueue(channel *amqp.Channel) (string, error) {
 	replyQ, err := channel.QueueDeclare(
 		"",
 		false,
@@ -81,12 +77,12 @@ func GenerateCorrelationId() string {
 
 func SendToQueueWithResponse(queueName, message string, ch *amqp.Channel) ([]byte, error) {
 	correlationId := GenerateCorrelationId()
-	replyQueue, err := createReplyQueue(ch)
+	replyQueue, err := CreateReplyQueue(ch)
 	if err != nil {
 		return nil, err
 	}
 
-	msgParams := Message{
+	msg := Message{
 		QueueName:     queueName,
 		Message:       message,
 		CorrelationId: correlationId,
@@ -94,18 +90,14 @@ func SendToQueueWithResponse(queueName, message string, ch *amqp.Channel) ([]byt
 		Ch:            ch,
 	}
 
-	err = SendMessage(msgParams)
-	if err != nil {
-		return nil, err
+	if publishErr := msg.Publish(); publishErr != nil {
+		return nil, publishErr
 	}
-	response, err := receiveResponse(correlationId, replyQueue, ch)
-	if err != nil {
-		return nil, err
-	}
-	return response, nil
+
+	return ReceiveResponse(correlationId, replyQueue, ch)
 }
 
-func declareQueue(ch *amqp.Channel, queueName string) (amqp.Queue, error) {
+func DeclareQueue(ch *amqp.Channel, queueName string) (amqp.Queue, error) {
 	q, err := ch.QueueDeclare(
 		queueName,
 		true,
@@ -120,7 +112,7 @@ func declareQueue(ch *amqp.Channel, queueName string) (amqp.Queue, error) {
 	return q, nil
 }
 
-func registerConsumer(ch *amqp.Channel, queueName string) (<-chan amqp.Delivery, error) {
+func RegisterConsumer(ch *amqp.Channel, queueName string) (<-chan amqp.Delivery, error) {
 	msgs, err := ch.Consume(
 		queueName,
 		"",
@@ -137,12 +129,12 @@ func registerConsumer(ch *amqp.Channel, queueName string) (<-chan amqp.Delivery,
 }
 
 func ConsumeMessages(ch *amqp.Channel, queueName string, handler func(*amqp.Channel, amqp.Delivery) error) error {
-	q, err := declareQueue(ch, queueName)
+	q, err := DeclareQueue(ch, queueName)
 	if err != nil {
 		return err
 	}
 
-	msgs, err := registerConsumer(ch, q.Name)
+	msgs, err := RegisterConsumer(ch, q.Name)
 	if err != nil {
 		return err
 	}
@@ -156,8 +148,7 @@ func ConsumeMessages(ch *amqp.Channel, queueName string, handler func(*amqp.Chan
 }
 
 func ReplyToMessage(ch *amqp.Channel, d amqp.Delivery, replyData []byte) error {
-	fmt.Printf("Replying to %s with %s\n", d.ReplyTo, string(replyData))
-	err := ch.Publish(
+	return ch.Publish(
 		"",
 		d.ReplyTo,
 		false,
@@ -168,8 +159,4 @@ func ReplyToMessage(ch *amqp.Channel, d amqp.Delivery, replyData []byte) error {
 			Body:          replyData,
 		},
 	)
-	if err != nil {
-		return fmt.Errorf("failed to reply to %s: %w", d.ReplyTo, err)
-	}
-	return nil
 }
