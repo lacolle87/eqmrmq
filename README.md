@@ -40,7 +40,7 @@ correlationId := GenerateCorrelationId()
 err := eqmrmq.SendMessage(eqmrmq.Message{
     QueueName:     "my_queue",
     Message:       "Hello, RabbitMQ!",
-    CorrelationId: correlationId,
+    CorrelationId: eqmrmq.correlationId,
     ReplyQueue:    "",
     Ch:            ch,
 })
