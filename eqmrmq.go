@@ -171,7 +171,7 @@ func RegisterConsumer(ch *amqp.Channel, queueName string) (<-chan amqp.Delivery,
 	return msgs, nil
 }
 
-func ConsumeMessages(ch *amqp.Channel, queueName string, handler func(ch *amqp.Channel, d amqp.Delivery, args ...interface{}) error, args ...interface{}) error {
+func ConsumeMessages(ch *amqp.Channel, queueName string, handler func(*amqp.Channel, amqp.Delivery, interface{}) error, arg interface{}) error {
 	q, err := DeclareQueue(ch, queueName)
 	if err != nil {
 		return err
@@ -183,7 +183,7 @@ func ConsumeMessages(ch *amqp.Channel, queueName string, handler func(ch *amqp.C
 	}
 
 	for d := range msgs {
-		if handlerErr := handler(ch, d, args...); handlerErr != nil {
+		if handlerErr := handler(ch, d, arg); handlerErr != nil {
 			return fmt.Errorf("handler error: %w", handlerErr)
 		}
 	}
