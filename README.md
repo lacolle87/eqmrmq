@@ -95,15 +95,18 @@ To consume messages from a queue:
 
 ```go
 // Define a handler function
-handler := func(ch *amqp.Channel, d amqp.Delivery) error {
-	fmt.Println("Received message:", string(d.Body))
-return nil
+handler := func(ch *amqp.Channel, d amqp.Delivery, arg interface{}) error {
+    fmt.Println("Received message:", string(d.Body))
+    return nil
 }
 
+// Any additional argument you want to pass to the handler
+additionalArg := "my_custom_argument" // This can be any type
+
 // Consume messages
-err := eqmrmq.ConsumeMessages(ch, "my_queue", handler)
+err := eqmrmq.ConsumeMessages(ch, "my_queue", handler, additionalArg)
 if err != nil {
-	panic(err)
+    panic(err)
 }
 ```
 
