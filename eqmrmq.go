@@ -184,6 +184,10 @@ func ConsumeMessages(ch *amqp.Channel, queueName string, handler func(*amqp.Chan
 
 	for d := range msgs {
 		if handlerErr := handler(ch, d, arg); handlerErr != nil {
+			_, deleteQueueErr := ch.QueueDelete(d.RoutingKey, false, false, false)
+			if deleteQueueErr != nil {
+				return fmt.Errorf("failed to delete queue: %w", deleteQueueErr)
+			}
 			return fmt.Errorf("handler error: %w", handlerErr)
 		}
 	}
