@@ -36,7 +36,7 @@ func connectRabbitMQ(rabbitURL string) (*amqp.Connection, error) {
 			slog.Info("Connected to RabbitMQ")
 			return conn, nil
 		}
-		slog.Warn(fmt.Sprintf("Failed to connect to RabbitMQ. Retrying in %s...", baseDelay), err)
+		slog.Warn(fmt.Sprintf("Failed to connect to RabbitMQ. Retrying in %s...", baseDelay), "error", err)
 		time.Sleep(baseDelay)
 		baseDelay *= 2
 	}
@@ -50,7 +50,7 @@ func monitorConnection(conn *amqp.Connection, rabbitURL string) {
 			slog.Warn("RabbitMQ connection lost. Reconnecting...")
 			newConn, err := connectRabbitMQ(rabbitURL)
 			if err != nil {
-				slog.Error("Failed to reconnect to RabbitMQ", err)
+				slog.Error("Failed to reconnect to RabbitMQ", "error", err)
 				continue
 			}
 			conn = newConn
@@ -177,9 +177,9 @@ func ConsumeMessages(ch *amqp.Channel, queueName string, handler func(*amqp.Chan
 		return err
 	}
 
-	msgs, err := RegisterConsumer(ch, q.Name)
-	if err != nil {
-		return err
+	msgs, errRegisterConsumer := RegisterConsumer(ch, q.Name)
+	if errRegisterConsumer != nil {
+		return errRegisterConsumer
 	}
 
 	for d := range msgs {
