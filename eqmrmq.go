@@ -8,9 +8,29 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
+type contentType string
+
+const (
+	ContentTypeTextPlain contentType = "text/plain"
+	ContentTypeTextHTML  contentType = "text/html"
+	ContentTypeTextCSV   contentType = "text/csv"
+
+	ContentTypeJSON contentType = "application/json"
+	ContentTypeXML  contentType = "application/xml"
+
+	ContentTypeOctetStream contentType = "application/octet-stream"
+	ContentTypePDF         contentType = "application/pdf"
+	ContentTypeJPEG        contentType = "image/jpeg"
+	ContentTypePNG         contentType = "image/png"
+	ContentTypeGIF         contentType = "image/gif"
+	ContentTypeAVIF        contentType = "image/avif"
+	ContentTypeZIP         contentType = "application/zip"
+)
+
 type Message struct {
 	QueueName     string
-	Message       string
+	ContentType   contentType
+	Message       []byte
 	CorrelationId string
 	ReplyQueue    string
 	Ch            *amqp.Channel
@@ -65,8 +85,8 @@ func (msg Message) Publish() error {
 		false,
 		false,
 		amqp.Publishing{
-			ContentType:   "text/plain",
-			Body:          []byte(msg.Message),
+			ContentType:   string(msg.ContentType),
+			Body:          msg.Message,
 			CorrelationId: msg.CorrelationId,
 			ReplyTo:       msg.ReplyQueue,
 		},
@@ -118,26 +138,19 @@ func GenerateCorrelationId() string {
 	return fmt.Sprintf("%d", time.Now().UnixNano())
 }
 
-func PublishToQueueWithResponse(queueName, message string, ch *amqp.Channel) ([]byte, error) {
-	correlationId := GenerateCorrelationId()
-	replyQueue, err := CreateReplyQueue(ch)
+func PublishToQueueWithResponse(msg Message) ([]byte, error) {
+	var err error
+	msg.CorrelationId = GenerateCorrelationId()
+	msg.ReplyQueue, err = CreateReplyQueue(msg.Ch)
 	if err != nil {
 		return nil, err
-	}
-
-	msg := Message{
-		QueueName:     queueName,
-		Message:       message,
-		CorrelationId: correlationId,
-		ReplyQueue:    replyQueue,
-		Ch:            ch,
 	}
 
 	if publishErr := msg.Publish(); publishErr != nil {
 		return nil, publishErr
 	}
 
-	return ReceiveResponse(correlationId, replyQueue, ch)
+	return ReceiveResponse(msg.CorrelationId, msg.ReplyQueue, msg.Ch)
 }
 
 func DeclareQueue(ch *amqp.Channel, queueName string) (amqp.Queue, error) {
