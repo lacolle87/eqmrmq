@@ -8,28 +8,8 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-type contentType string
-
-const (
-	ContentTypeTextPlain contentType = "text/plain"
-	ContentTypeTextHTML  contentType = "text/html"
-	ContentTypeTextCSV   contentType = "text/csv"
-
-	ContentTypeJSON contentType = "application/json"
-	ContentTypeXML  contentType = "application/xml"
-
-	ContentTypeOctetStream contentType = "application/octet-stream"
-	ContentTypePDF         contentType = "application/pdf"
-	ContentTypeJPEG        contentType = "image/jpeg"
-	ContentTypePNG         contentType = "image/png"
-	ContentTypeGIF         contentType = "image/gif"
-	ContentTypeAVIF        contentType = "image/avif"
-	ContentTypeZIP         contentType = "application/zip"
-)
-
 type Message struct {
 	QueueName     string
-	ContentType   contentType
 	Message       []byte
 	CorrelationId string
 	ReplyQueue    string
@@ -85,7 +65,6 @@ func (msg Message) Publish() error {
 		false,
 		false,
 		amqp.Publishing{
-			ContentType:   string(msg.ContentType),
 			Body:          msg.Message,
 			CorrelationId: msg.CorrelationId,
 			ReplyTo:       msg.ReplyQueue,
