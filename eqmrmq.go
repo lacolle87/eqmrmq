@@ -1,6 +1,7 @@
 package eqmrmq
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"time"
@@ -10,7 +11,7 @@ import (
 
 type Message struct {
 	QueueName     string
-	Message       []byte
+	Msg           []byte
 	CorrelationId string
 	ReplyQueue    string
 	Ch            *amqp.Channel
@@ -65,7 +66,7 @@ func (msg Message) Publish() error {
 		false,
 		false,
 		amqp.Publishing{
-			Body:          msg.Message,
+			Body:          msg.Msg,
 			CorrelationId: msg.CorrelationId,
 			ReplyTo:       msg.ReplyQueue,
 		},
@@ -130,6 +131,21 @@ func PublishToQueueWithResponse(msg Message) ([]byte, error) {
 	}
 
 	return ReceiveResponse(msg.CorrelationId, msg.ReplyQueue, msg.Ch)
+}
+
+func SendMessage(queueName string, message interface{}, ch *amqp.Channel) ([]byte, error) {
+	msgJSON, err := json.Marshal(message)
+	if err != nil {
+		return nil, err
+	}
+
+	msg := Message{
+		QueueName: queueName,
+		Msg:       msgJSON,
+		Ch:        ch,
+	}
+
+	return PublishToQueueWithResponse(msg)
 }
 
 func DeclareQueue(ch *amqp.Channel, queueName string) (amqp.Queue, error) {
